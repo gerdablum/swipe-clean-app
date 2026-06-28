@@ -16,6 +16,7 @@ type StorageAccessNativeModule = {
     sourceFolderUri: string | null;
     binFolderUri: string | null;
   } | null>;
+  getAllImageUrisInFolder: (folderUri: string) => Promise<string[]>;
 };
 
 const storageAccessModule = NativeModules.StorageAccessModule as StorageAccessNativeModule | undefined;
@@ -49,11 +50,6 @@ export const moveToBin = async (sourceUri: string, binUri: string): Promise<bool
     console.error('Error moving file to bin:', e);
     return false;
   }
-};
-
-export const saveUri = async (uri: string, folderUri: string): Promise<boolean> => {
-  // TODO implement this method
-  return false;
 };
 
 export const openFolderInFileManager = async (folderUri: string): Promise<boolean> => {
@@ -96,3 +92,16 @@ export const getSavedFolderPaths = async (): Promise<{
     return null;
   }
 };
+
+export const getAllImageUrisInFolder = async(folderPath: string): Promise<string[] | null>  => {
+  if (!storageAccessModule || !storageAccessModule.getSavedFolderPaths) return null;
+  try {
+    const paths = await storageAccessModule.getAllImageUrisInFolder(folderPath);  
+    return paths;
+  } catch (e) {
+    console.error('Error getting saved folder paths:', e);
+  }
+  return [];
+};
+
+

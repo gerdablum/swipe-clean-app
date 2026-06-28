@@ -10,14 +10,16 @@ import {
   BackHandler,
 } from 'react-native';
 
-import { getImageMetadata } from '../services/photoSession';
+import { getImageMetadata } from '../services/fileManagerService';
 import Icon from 'react-native-vector-icons/Ionicons';
+import { ExifNativeResult } from '../services/fileManagerService';
+
 
 type Props = {
   photos: string[];
   startIndex: number | undefined;
-  onKeep?: (uri: string) => void;
-  onDelete?: (uri: string) => Promise<boolean> | boolean;
+  onKeep?: (uri: string, date: string, lat: number | null, lon: number | null) => Promise<boolean> | boolean;
+  onDelete?: (uri: string, date: string, lat: number | null, lon: number | null) => Promise<boolean> | boolean;
   onComplete?: () => void;
   onClose?: (index: number) => void;
 };
@@ -30,6 +32,7 @@ const PhotoViewer = ({photos, startIndex, onKeep, onDelete, onComplete, onClose}
   const [location, setLocation] = useState("");
   const [index, setIndex] = useState<number>(startIndex ?? 0);
   const pan = useRef(new Animated.ValueXY()).current;
+  const exifPromiseRef = useRef<Promise<ExifNativeResult | null> | null>(null);
 
   useEffect(() => {
     setDate('');
@@ -54,10 +57,15 @@ const PhotoViewer = ({photos, startIndex, onKeep, onDelete, onComplete, onClose}
   
   const handleAction = async (action: 'keep' | 'delete') => {
     const uri = photos[index];
+    const exif = await exifPromiseRef.current;
     if (action === 'keep') {
-      onKeep?.(uri);
+      const kept = await onKeep?.(uri, exif?.dateTime ?? "", exif?.lat ?? null, exif?.lon ?? null);
+      if (kept === false) {
+        console.error('Failed to save status kept: ', uri);
+        return;
+      }
     } else if (action === 'delete') {
-      const moved = await onDelete?.(uri);
+      const moved = await onDelete?.(uri, exif?.dateTime ?? "", exif?.lat ?? null, exif?.lon ?? null);
       if (moved === false) {
         console.error('Failed to delete photo: ', uri);
         return;
@@ -84,29 +92,23 @@ const PhotoViewer = ({photos, startIndex, onKeep, onDelete, onComplete, onClose}
   };
 
   const handleImageLoad = async (uri: string) => {
-    try {
-      
-      const exif  = await getImageMetadata(uri);
-      console.log('Exif data:', exif);
-      if (exif?.dateTime) {
-        setDate(formatExifDate(exif.dateTime));
-      } else {
-        setDate('');
-      }
-
-      if (exif?.lat && exif?.lon) {
-        setLocation(`${exif.lat}, ${exif.lon}`);
-      } else {
-        setLocation('');
-      }
-    } catch (err) {
-      setDate('');
-      setLocation('');
-    }
+      exifPromiseRef.current  = getImageMetadata(uri);
+      exifPromiseRef.current.then((exif) => {
+        if (exif?.dateTime) {
+          setDate(formatExifDate(exif.dateTime));
+        } else {
+          setDate('');
+        }
+        if (exif?.lat != null && exif?.lon != null) {
+          setLocation(`${exif.lat}, ${exif.lon}`);
+        } else {
+          setLocation('');
+        }
+    });
   };
 
   function formatExifDate(exifDate: string) {
-    if (!exifDate) return "null";
+    if (!exifDate) return "";
 
     const [date] = exifDate.split(' ');
     const [year, month, day] = date.split(':');

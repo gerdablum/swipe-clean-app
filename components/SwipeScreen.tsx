@@ -3,9 +3,10 @@ import {Alert, StatusBar, StyleSheet, View} from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
 import PhotoViewer from './PhotoViewer';
-import {moveToBin, saveUri} from '../services/photoSession';
+import {moveToBin} from '../services/fileManagerService';
 import {RootStackParamList} from '../types/navigation';
 import {usePhotoViewer} from '../context/PhotoViewerContext';
+import {photoStateService} from '../services/photoStateInstance.ts';
 
 type SwipeScreenProps = NativeStackScreenProps<RootStackParamList, 'Swipe'>;
 
@@ -32,6 +33,17 @@ const SwipeScreen = ({navigation, route}: SwipeScreenProps) => {
     });
   };
 
+  const onKeep = async (uri: string, date: string, lat: number | null, lon: number | null) => {
+    const result = await photoStateService.saveUri(uri, date, lat, lon, 'kept');
+    return result;
+  }
+
+  const onDelete = async (uri: string, date: string, lat: number | null, lon: number | null) => {
+    await photoStateService.saveUri(uri, date, lat, lon, 'deleted');
+    const result = await moveToBin(uri, route.params.binUri);
+    return result;
+  }
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <StatusBar barStyle="light-content" />
@@ -39,8 +51,8 @@ const SwipeScreen = ({navigation, route}: SwipeScreenProps) => {
         <PhotoViewer
           photos={route.params.photos}
           startIndex={route.params.rememberedIndex ?? 0}
-          onKeep={(uri) => {saveUri(uri, route.params.folderUri)}}
-          onDelete={(uri) => moveToBin(uri, route.params.binUri)}
+          onKeep={onKeep}
+          onDelete={onDelete}
           onClose={returnToPreview}
           onComplete={() => {
             returnToPreviewWithFinishedActivity();

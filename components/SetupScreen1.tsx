@@ -11,7 +11,7 @@ import {
 import {SafeAreaView} from 'react-native-safe-area-context';
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
 import {RootStackParamList} from '../types/navigation';
-import {pickFolder} from '../services/folderPicker';
+import {pickFolder} from '../services/folderPickerService';
 
 import { DEST_FOLDER_URI_KEY, BIN_FOLDER_URI_KEY } from '../services/constants';
 type StorageAccessNativeModule = {

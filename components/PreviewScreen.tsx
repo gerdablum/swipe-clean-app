@@ -14,12 +14,12 @@ import {
 } from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
-import {listImageFiles, openFolderInFileManager} from '../services/photoSession';
+import {getAllImageUrisInFolder} from '../services/fileManagerService';
+import {pick16RandomItems} from '../services/utils';
 import {RootStackParamList} from '../types/navigation';
 import Icon from 'react-native-vector-icons/Ionicons';
 import {usePhotoViewer} from '../context/PhotoViewerContext';
-
-
+import {photoStateService} from '../services/photoStateInstance.ts';
 
 type PreviewScreenProps = NativeStackScreenProps<RootStackParamList, 'Preview'>;
 
@@ -33,7 +33,14 @@ const PreviewScreen = ({navigation, route}: PreviewScreenProps) => {
     setLoadingText(true);
     setRefreshing(true);
     try {
-      const files = await listImageFiles(route.params.folderUri, []);
+      const allFiles = await getAllImageUrisInFolder(route.params.folderUri);
+      if (!allFiles) {
+        Alert.alert('Preview error', 'Unable to load image preview.');
+        return;
+      }
+     
+      const unseen = await photoStateService.getUnseenUris(allFiles);
+      const files = pick16RandomItems(unseen);
       setPhotos(files);
     } catch (error) {
       Alert.alert('Preview error', 'Unable to load image preview.');

@@ -4,8 +4,9 @@ import {NativeStackScreenProps} from '@react-navigation/native-stack';
 import {RootStackParamList} from '../types/navigation';
 import Icon from 'react-native-vector-icons/Ionicons';
 import {Alert} from 'react-native';
-import {openFolderInFileManager} from '../services/photoSession';
-import {pickFolder} from '../services/folderPicker';
+import {openFolderInFileManager} from '../services/fileManagerService';
+import {pickFolder} from '../services/folderPickerService';
+import {photoStateService} from '../services/photoStateInstance.ts';
 
 import { DEST_FOLDER_URI_KEY, BIN_FOLDER_URI_KEY } from '../services/constants';
 
@@ -97,6 +98,7 @@ const SettingsScreen = ({navigation, route}: SettingsScreenProps) => {
                     {
                       text: 'OK',
                       onPress: () => { 
+                        photoStateService.deleteAll();
                         refreshToken.current = Date.now();
                       },
                       style: 'destructive',

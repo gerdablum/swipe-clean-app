@@ -20,6 +20,7 @@ import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.ReactContextBaseJavaModule
 import com.facebook.react.bridge.ReactMethod
 import android.provider.MediaStore
+import android.annotation.SuppressLint
 
 class StorageAccessModule(private val reactContext: ReactApplicationContext) :
     ReactContextBaseJavaModule(reactContext) {
@@ -33,6 +34,8 @@ class StorageAccessModule(private val reactContext: ReactApplicationContext) :
   }
 
   private val folderPickerEventListener = object : BaseActivityEventListener() {
+
+    @android.annotation.SuppressLint("WrongConstant")
     override fun onActivityResult(
       activity: Activity,
       requestCode: Int,
@@ -259,7 +262,7 @@ class StorageAccessModule(private val reactContext: ReactApplicationContext) :
           val mimeType = cursor.getString(mimeIndex)
 
           // Only process if it's an image and NOT a directory
-          if (mimeType != null && mimeType.startsWith("image/")) {
+          if (mimeType != null && (mimeType.startsWith("image/") || mimeType.startsWith("video/"))) {
             val docId = cursor.getString(idIndex)
             val fileUri = DocumentsContract.buildDocumentUriUsingTree(rootTreeUri, docId)
             results.pushString(fileUri.toString())
