@@ -118,59 +118,6 @@ class StorageAccessModule(private val reactContext: ReactApplicationContext) :
   }
 
   @ReactMethod
-  fun isManageExternalStorageGranted(promise: Promise) {
-    try {
-      if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) {
-        promise.resolve(true)
-        return
-      }
-
-      promise.resolve(Environment.isExternalStorageManager())
-    } catch (error: Exception) {
-      promise.reject("CHECK_PERMISSION_FAILED", error.message, error)
-    }
-  }
-
-  @ReactMethod
-  fun openManageExternalStorageSettings(promise: Promise) {
-    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) {
-      promise.resolve(true)
-      return
-    }
-
-    val globalIntent = Intent(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION).apply {
-      addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-    }
-
-    try {
-      val packageName = reactContext.packageName
-      val current = reactContext.currentActivity
-
-      val appSpecificIntent = Intent(
-        Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION,
-        Uri.parse("package:$packageName"),
-      ).apply {
-        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-      }
-
-      if (current != null) {
-        current.startActivity(appSpecificIntent)
-      } else {
-        reactContext.startActivity(appSpecificIntent)
-      }
-
-      promise.resolve(true)
-    } catch (_: Exception) {
-      try {
-        reactContext.startActivity(globalIntent)
-        promise.resolve(true)
-      } catch (fallbackError: Exception) {
-        promise.reject("OPEN_SETTINGS_FAILED", fallbackError.message, fallbackError)
-      }
-    }
-  }
-
-  @ReactMethod
   fun openFolderPicker(promise: Promise) {
     val current = reactContext.currentActivity
     if (current == null) {

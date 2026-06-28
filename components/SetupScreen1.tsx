@@ -14,14 +14,9 @@ import {RootStackParamList} from '../types/navigation';
 import {pickFolder} from '../services/folderPickerService';
 
 import { DEST_FOLDER_URI_KEY, BIN_FOLDER_URI_KEY } from '../services/constants';
-type StorageAccessNativeModule = {
-  openFolderPicker: () => Promise<string | null>;
-};
 
 type SetupScreen1Props = NativeStackScreenProps<RootStackParamList, 'SetupScreen1'>;
 
-const storageAccessModule = NativeModules
-  .StorageAccessModule as StorageAccessNativeModule | undefined;
 
 const SetupScreen1 = ({navigation}: SetupScreen1Props) => {
   const [sourceFolderUri, setSourceFolderUri] = useState<string | null>(null);

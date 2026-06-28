@@ -22,13 +22,14 @@ type PermissionScreenProps = NativeStackScreenProps<
 
 const PermissionScreen = ({navigation}: PermissionScreenProps) => {
   const handlePermissionGranted = useCallback(() => {
-    navigation.replace('Home');
+    navigation.replace('SetupScreen1');
   }, [navigation]);
 
   return (
     <StoragePermissionGate
       appName="SwipeClean"
       onPermissionGranted={handlePermissionGranted}
+      onContinueAnyway={handlePermissionGranted}
     />
   );
 };
