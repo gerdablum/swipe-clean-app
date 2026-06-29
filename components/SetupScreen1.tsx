@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useState, useEffect} from 'react';
 import {
   Alert,
   NativeModules,
@@ -15,6 +15,7 @@ import {pickFolder} from '../services/folderPickerService';
 
 import { DEST_FOLDER_URI_KEY, BIN_FOLDER_URI_KEY } from '../services/constants';
 
+
 type SetupScreen1Props = NativeStackScreenProps<RootStackParamList, 'SetupScreen1'>;
 
 
@@ -22,7 +23,9 @@ const SetupScreen1 = ({navigation}: SetupScreen1Props) => {
   const [sourceFolderUri, setSourceFolderUri] = useState<string | null>(null);
   const [destinationFolderUri, setDestinationFolderUri] = useState<string | null>(null);
 
-
+  useEffect(() => {
+      
+    }, []);
   const startPreview = () => {
     if (!sourceFolderUri || !destinationFolderUri) {
       Alert.alert('Missing folder', 'Select both a source folder and a bin folder first.');

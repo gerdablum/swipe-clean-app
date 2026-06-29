@@ -1,30 +1,55 @@
-import React, {useState} from 'react';
+import React, {useState, useEffect, useCallback} from 'react';
 import {StatusBar, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import permissionModule from '../services/permissionService';
+import {RootStackParamList} from '../types/navigation';
+import {NativeStackScreenProps} from '@react-navigation/native-stack';
+import { DEST_FOLDER_URI_KEY, BIN_FOLDER_URI_KEY } from '../services/constants';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
-type PermissionState = 'idle' | 'requesting' | 'failed' | 'blocked';
+type PermissionScreenProps = NativeStackScreenProps<
+  RootStackParamList,
+  'Permission'
+>;
 
-type StoragePermissionGateProps = {
-  appName?: string;
-  onPermissionGranted?: () => void;
-  onContinueAnyway?: () => void;
-};
+type PermissionState = 'idle' | 'requesting' | 'failed' | 'blocked' | 'granted' | 'nothing';
 
-const StoragePermissionGate = ({
-  appName = 'SwipeClean',
-  onPermissionGranted,
-  onContinueAnyway,
-}: StoragePermissionGateProps) => {
-  const [permissionState, setPermissionState] = useState<PermissionState>('idle');
+const PermissionScreen = ({navigation}: PermissionScreenProps) => {
+  const [permissionState, setPermissionState] = useState<PermissionState>('nothing');
+  
+
+  const handleNextAction = useCallback(() => {
+    const checkSavedFolder = async () => {
+            const destUri = await AsyncStorage.getItem(DEST_FOLDER_URI_KEY);
+            const binUri = await AsyncStorage.getItem(BIN_FOLDER_URI_KEY);
+            if (destUri && binUri) {
+              navigation.replace('Preview', {folderUri: destUri, binUri: binUri});
+            } else {
+              navigation.replace('SetupScreen1');
+            }
+          };
+          permissionModule.setPermisionMadeFlag();
+          checkSavedFolder();
+    
+  }, [navigation]);
+
+
+  useEffect(() => {
+    permissionModule.checkMediaLocationPermission().then((responseStatus) => {
+      if (responseStatus === 'granted' || responseStatus === 'blocked') {
+        handleNextAction();
+      } else {
+        setPermissionState('idle');
+      }
+    });
+  }, []);
 
   const requestPermission = async () => {
     setPermissionState('requesting');
 
     const result = await permissionModule.requestMediaLocationPermission();
-
     if (result === 'granted') {
-      onPermissionGranted?.();
+      handleNextAction();
     } else if (result === 'blocked') {
       setPermissionState('blocked');
     } else {
@@ -34,7 +59,7 @@ const StoragePermissionGate = ({
   
   const renderMessage = () => {
     if (permissionState === 'idle' || permissionState === 'requesting') {
-      return `${appName} needs access to your photo location data to show where photos were taken.`;
+      return `SwipeCleanApp needs access to your photo location data to show where photos were taken.`;
     }
 
     if (permissionState === 'failed') {
@@ -68,7 +93,7 @@ const StoragePermissionGate = ({
             <Text style={styles.buttonText}>Try again</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity style={[styles.button, styles.buttonSmaller]} onPress={onContinueAnyway}>
+          <TouchableOpacity style={[styles.button, styles.buttonSmaller]} onPress={handleNextAction}>
             <Text style={styles.buttonText}>Continue anyway</Text>
           </TouchableOpacity>
         </View>
@@ -77,7 +102,7 @@ const StoragePermissionGate = ({
 
     if (permissionState === 'blocked') {
       return (
-        <TouchableOpacity style={styles.button} onPress={onContinueAnyway}>
+        <TouchableOpacity style={styles.button} onPress={handleNextAction}>
           <Text style={styles.buttonText}>Continue anyway</Text>
         </TouchableOpacity>
       );
@@ -86,11 +111,11 @@ const StoragePermissionGate = ({
     return null;
   };
 
-  return (
+  if (permissionState === 'idle' || permissionState === 'requesting' || permissionState === 'blocked' || permissionState === 'failed') return (
     <SafeAreaView style={styles.safeArea}>
       <StatusBar barStyle="dark-content" />
       <View style={styles.container}>
-        <Text style={styles.title}>Welcome to {appName}</Text>
+        <Text style={styles.title}>Welcome to SwipeCleanApp</Text>
         <Text style={styles.subtitle}>
           {renderMessage()}
         </Text>
@@ -99,6 +124,8 @@ const StoragePermissionGate = ({
       </View>
     </SafeAreaView>
   );
+
+  else return null;
 };
 
 const styles = StyleSheet.create({
@@ -153,4 +180,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default StoragePermissionGate;
+export default PermissionScreen;

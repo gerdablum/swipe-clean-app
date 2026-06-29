@@ -1,45 +1,24 @@
-import React, {useCallback} from 'react';
+
 import {NavigationContainer} from '@react-navigation/native';
-import {
-  createNativeStackNavigator,
-  NativeStackScreenProps,
-} from '@react-navigation/native-stack';
+import {createNativeStackNavigator}  from '@react-navigation/native-stack';
 import HomeScreen from './components/HomeScreen';
 import SetupScreen1 from './components/SetupScreen1';
 import PreviewScreen from './components/PreviewScreen.tsx';
 import SwipeScreen from './components/SwipeScreen.tsx';
 import SettingsScreen from './components/SettingsScreen.tsx';
-import StoragePermissionGate from './components/StoragePermissionGate';
+import PermissionScreen from './components/StoragePermissionGate';
 import {RootStackParamList} from './types/navigation';
 import {PhotoViewerProvider} from './context/PhotoViewerContext';
+import permissionModule from './services/permissionService';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
-
-type PermissionScreenProps = NativeStackScreenProps<
-  RootStackParamList,
-  'Permission'
->;
-
-const PermissionScreen = ({navigation}: PermissionScreenProps) => {
-  const handlePermissionGranted = useCallback(() => {
-    navigation.replace('SetupScreen1');
-  }, [navigation]);
-
-  return (
-    <StoragePermissionGate
-      appName="SwipeClean"
-      onPermissionGranted={handlePermissionGranted}
-      onContinueAnyway={handlePermissionGranted}
-    />
-  );
-};
 
 const App = () => {
   return (
     <PhotoViewerProvider>
       <NavigationContainer>
         <Stack.Navigator
-          initialRouteName="Permission"
+          initialRouteName='Permission'
           screenOptions={{headerShown: false}}>
           <Stack.Screen name="Permission" component={PermissionScreen} />
           <Stack.Screen name="Home" component={HomeScreen} />

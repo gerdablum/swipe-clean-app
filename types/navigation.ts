@@ -6,3 +6,5 @@ export type RootStackParamList = {
   Preview: {folderUri: string; binUri: string; refreshToken?: number};
   Swipe: {photos: string[]; folderUri: string; binUri: string, rememberedIndex?: number};
 };
+
+
