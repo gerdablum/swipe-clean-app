@@ -209,7 +209,7 @@ class StorageAccessModule(private val reactContext: ReactApplicationContext) :
           val mimeType = cursor.getString(mimeIndex)
 
           // Only process if it's an image and NOT a directory
-          if (mimeType != null && (mimeType.startsWith("image/") || mimeType.startsWith("video/"))) {
+          if (mimeType != null && (mimeType.startsWith("image/") /*|| mimeType.startsWith("video/")*/)) {
             val docId = cursor.getString(idIndex)
             val fileUri = DocumentsContract.buildDocumentUriUsingTree(rootTreeUri, docId)
             results.pushString(fileUri.toString())

@@ -42,9 +42,8 @@ const permissionModule: PermissionModule = {
         PermissionsAndroid.PERMISSIONS.ACCESS_MEDIA_LOCATION);
 
       if (granted === PermissionsAndroid.RESULTS.GRANTED) return 'granted';
-      if (granted === PermissionsAndroid.RESULTS.NEVER_ASK_AGAIN) {
-        return 'blocked';
-      }
+      if (granted === PermissionsAndroid.RESULTS.NEVER_ASK_AGAIN) return 'blocked';
+      return 'denied';
      
     } catch (error) {
       console.error('Failed to request media location permission:', error);

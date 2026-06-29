@@ -2,7 +2,7 @@
 import {NavigationContainer} from '@react-navigation/native';
 import {createNativeStackNavigator}  from '@react-navigation/native-stack';
 import HomeScreen from './components/HomeScreen';
-import SetupScreen1 from './components/SetupScreen1';
+import SetupScreen from './components/SetupScreen.tsx';
 import PreviewScreen from './components/PreviewScreen.tsx';
 import SwipeScreen from './components/SwipeScreen.tsx';
 import SettingsScreen from './components/SettingsScreen.tsx';
@@ -23,7 +23,7 @@ const App = () => {
           <Stack.Screen name="Permission" component={PermissionScreen} />
           <Stack.Screen name="Home" component={HomeScreen} />
           <Stack.Screen name="Settings" component={SettingsScreen} />
-          <Stack.Screen name="SetupScreen1" component={SetupScreen1} />
+          <Stack.Screen name="SetupScreen" component={SetupScreen} />
           <Stack.Screen name="Preview" component={PreviewScreen} />
           <Stack.Screen name="Swipe" component={SwipeScreen} />
         </Stack.Navigator>

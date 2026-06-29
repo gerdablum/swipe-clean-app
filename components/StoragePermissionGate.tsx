@@ -25,7 +25,7 @@ const PermissionScreen = ({navigation}: PermissionScreenProps) => {
             if (destUri && binUri) {
               navigation.replace('Preview', {folderUri: destUri, binUri: binUri});
             } else {
-              navigation.replace('SetupScreen1');
+              navigation.replace('SetupScreen');
             }
           };
           permissionModule.setPermisionMadeFlag();
@@ -117,6 +117,11 @@ const PermissionScreen = ({navigation}: PermissionScreenProps) => {
       <View style={styles.container}>
         <Text style={styles.title}>Welcome to SwipeCleanApp</Text>
         <Text style={styles.subtitle}>
+          SwipeClean helps you tidy up your photo gallery. 
+          We'll bring up some of your photos for you to swipe through, one at a time. 
+          Keep the ones you love, and sort out the rest.
+        </Text>
+        <Text style={styles.subtitle}>
           {renderMessage()}
         </Text>
 
@@ -131,7 +136,7 @@ const PermissionScreen = ({navigation}: PermissionScreenProps) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
+    justifyContent: 'flex-start',
     alignItems: 'center',
     paddingHorizontal: 24,
     backgroundColor: '#F5F7FB',
@@ -171,12 +176,15 @@ const styles = StyleSheet.create({
     marginBottom: 14,
     textAlign: 'center',
     color: '#0F172A',
+    marginTop: 60,
   },
   subtitle: {
+    width: '90%',
     fontSize: 16,
-    textAlign: 'center',
+    textAlign: 'left',
     color: '#334155',
     lineHeight: 22,
+    marginTop: 48,
   },
 });
 

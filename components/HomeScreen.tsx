@@ -9,7 +9,7 @@ import { DEST_FOLDER_URI_KEY, BIN_FOLDER_URI_KEY } from '../services/constants';
 type HomeStackParamList = {
   Home: undefined;
   Settings: undefined;
-  SetupScreen1: undefined;
+  SetupScreen: undefined;
   Preview: { folderUri: string; binUri: string; refreshToken?: number };
 };
 
@@ -43,7 +43,7 @@ const HomeScreen = ({navigation}: HomeScreenProps) => {
           <TouchableOpacity
             accessibilityRole="button"
             accessibilityLabel="Start setup"
-            onPress={() => navigation.replace('SetupScreen1')}
+            onPress={() => navigation.replace('SetupScreen')}
             style={styles.setupCard}>
             <Text style={styles.subtitle}>Start setup</Text>
           </TouchableOpacity>

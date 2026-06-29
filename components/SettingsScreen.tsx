@@ -181,12 +181,12 @@ const styles = StyleSheet.create({
     fontSize: 18,
     color: '#000',
   },
-  infoText: {
+  
+infoText: {
     marginTop: 24, 
     fontSize: 14, 
     color: '#5a5a5a'
-  },
-  actionText: {
+  },  actionText: {
     color: '#fff',
     fontWeight: '600',
     fontSize: 16,
