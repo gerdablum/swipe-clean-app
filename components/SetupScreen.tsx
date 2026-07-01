@@ -158,8 +158,8 @@ const styles = StyleSheet.create({
   },
 
   image: {
-    width: '70%', 
-    height: 220, 
+    width: '50%', 
+    height: 200, 
     alignSelf: 'center',
     resizeMode: 'contain'
   },
