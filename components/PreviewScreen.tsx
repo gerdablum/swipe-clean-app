@@ -23,6 +23,7 @@ import {photoStateService} from '../services/photoStateInstance.ts';
 
 type PreviewScreenProps = NativeStackScreenProps<RootStackParamList, 'Preview'>;
 
+// TODO use context for source Uris instead of routing params
 const PreviewScreen = ({navigation, route}: PreviewScreenProps) => {
   const [photos, setPhotos] = useState<string[]>([]);
   const [loadingText, setLoadingText] = useState(true);
@@ -33,8 +34,17 @@ const PreviewScreen = ({navigation, route}: PreviewScreenProps) => {
     setLoadingText(true);
     setRefreshing(true);
     try {
-      const allFiles = await getAllImageUrisInFolder(route.params.folderUri);
-      if (!allFiles) {
+      let allFiles: string[] = [];
+      for (const uri of route.params.sourceUris) {
+        const filesInFolder = await getAllImageUrisInFolder(uri);
+        if (filesInFolder) {
+          allFiles = allFiles.concat(filesInFolder);
+        } else {
+          console.warn(`No files found in folder: ${uri}`);
+        }
+      }
+
+      if (allFiles.length === 0) {
         Alert.alert('Preview error', 'Unable to load image preview.');
         return;
       }
@@ -49,7 +59,7 @@ const PreviewScreen = ({navigation, route}: PreviewScreenProps) => {
       setLoadingText(false);
       setRememberedIndex(0); // reset remembered index when loading new set of photos
     }
-  }, [route.params.folderUri]);
+  }, [route.params.sourceUris]);
 
   // loads on mount
   useEffect(() => {
@@ -67,7 +77,7 @@ const PreviewScreen = ({navigation, route}: PreviewScreenProps) => {
   const startSwiping = () => {
     navigation.navigate('Swipe', {
       photos,
-      folderUri: route.params.folderUri,
+      soureUris: route.params.sourceUris,
       binUri: route.params.binUri,
       rememberedIndex: getRememberedIndex(),
     });
@@ -81,7 +91,7 @@ const PreviewScreen = ({navigation, route}: PreviewScreenProps) => {
           accessibilityRole="button"
           accessibilityLabel="Open settings"
           onPress={() => navigation.navigate('Settings', {
-            sourceUri: route.params.folderUri,
+            sourceUris: route.params.sourceUris,
             binUri: route.params.binUri,
           })}
           style={styles.settingsButton}>

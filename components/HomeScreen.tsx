@@ -2,9 +2,7 @@ import React, {useState, useEffect} from 'react';
 import {StatusBar, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-
-import { DEST_FOLDER_URI_KEY, BIN_FOLDER_URI_KEY } from '../services/constants';
+import {folderPickerService} from '../services/folderPickerInstance';
 //TODO can be removed?
 type HomeStackParamList = {
   Home: undefined;
@@ -19,8 +17,8 @@ const HomeScreen = ({navigation}: HomeScreenProps) => {
   const [isLoading, setIsLoading] = useState(true);
   useEffect(() => {
     const checkSavedFolder = async () => {
-      const destUri = await AsyncStorage.getItem(DEST_FOLDER_URI_KEY);
-      const binUri = await AsyncStorage.getItem(BIN_FOLDER_URI_KEY);
+      const destUri = await folderPickerService.getSourceFolder();
+      const binUri = await folderPickerService.getBinFolder();
       if (destUri && binUri) {
         navigation.replace('Preview', {folderUri: destUri, binUri: binUri});
       } else {

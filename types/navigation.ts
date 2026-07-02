@@ -1,10 +1,11 @@
 export type RootStackParamList = {
   Permission: undefined;
   Home: undefined;
-  Settings: {sourceUri: string; binUri: string;};
-  SetupScreen: undefined;
-  Preview: {folderUri: string; binUri: string; refreshToken?: number};
-  Swipe: {photos: string[]; folderUri: string; binUri: string, rememberedIndex?: number};
+  Settings: {sourceUris: string[]; binUri: string;};
+  SetupScreen: {sourceFolderSelected?: boolean} | undefined;
+    ManageSourceFolderScreen: {origin: 'setup' | 'settings'};
+  Preview: {sourceUris: string[]; binUri: string; refreshToken?: number};
+  Swipe: {photos: string[]; soureUris: string[]; binUri: string, rememberedIndex?: number};
 };
 
 

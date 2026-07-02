@@ -5,11 +5,11 @@ import {RootStackParamList} from '../types/navigation';
 import Icon from 'react-native-vector-icons/Ionicons';
 import {Alert} from 'react-native';
 import {openFolderInFileManager} from '../services/fileManagerService';
-import {pickFolder} from '../services/folderPickerService';
 import {photoStateService} from '../services/photoStateInstance.ts';
-
-import { DEST_FOLDER_URI_KEY, BIN_FOLDER_URI_KEY } from '../services/constants';
-
+import {useManageSourceFolder} from '../context/ManageSourceFolderContext';
+import { arraysEqual } from '../services/utils.ts';
+import {folderPickerService} from '../services/folderPickerInstance';
+ 
 type SettingsScreenProps = NativeStackScreenProps<RootStackParamList, 'Settings'>;
 const settingsItems = [
   {id: 'sourceFolder', label: 'Change source folder'},
@@ -19,10 +19,12 @@ const settingsItems = [
 
 
 const SettingsScreen = ({navigation, route}: SettingsScreenProps) => {
+  const {getSourceFolderUris} = useManageSourceFolder();
   const binFolderUri = useRef<string | null>(route.params.binUri);
-  const sourceFolderUri = useRef<string | null>( route.params.sourceUri);
+  const sourceFolderUris = useRef<string[] | null>( route.params.sourceUris);
   const refreshToken = useRef<number | undefined>(undefined);
-  useEffect(() => {
+
+  useEffect(() => {    
     const subscription = BackHandler.addEventListener('hardwareBackPress', () => {
       handleBack();
       return true; // true = we handled it, prevent default behavior
@@ -30,6 +32,7 @@ const SettingsScreen = ({navigation, route}: SettingsScreenProps) => {
 
     return () => subscription.remove();
   }, []);
+
   const openBinFolder = async () => {
     const opened = await openFolderInFileManager(binFolderUri.current ?? "");
     if (!opened) {
@@ -38,8 +41,14 @@ const SettingsScreen = ({navigation, route}: SettingsScreenProps) => {
   };
 
   const handleBack = () => {
+    const newSourceFolders = getSourceFolderUris()
+    const oldSourceFolders = sourceFolderUris.current ?? [];
+    if ( !(arraysEqual(newSourceFolders, oldSourceFolders)) ) {
+      refreshToken.current = Date.now();
+    }
+    sourceFolderUris.current = newSourceFolders;
     navigation.popTo('Preview', {
-      folderUri: sourceFolderUri.current ?? "", 
+      sourceUris: sourceFolderUris.current ?? [], 
       binUri: binFolderUri.current ?? "", 
       refreshToken: refreshToken.current,
     });
@@ -63,17 +72,12 @@ const SettingsScreen = ({navigation, route}: SettingsScreenProps) => {
             {settingsItems.map((item, index) => (
               <TouchableOpacity key={item.id} style={[styles.item, index === 0 && styles.firstItem]} 
               onPress={() => {
-                if (item.id === 'sourceFolder') {
-                  pickFolder('Source folder error', DEST_FOLDER_URI_KEY).then((sourceUri) => {
-                    sourceFolderUri.current = sourceUri ?? "";
-                    refreshToken.current = Date.now();
+                if (item.label === 'Change source folder') {
+                  navigation.navigate('ManageSourceFolderScreen', {origin: 'settings'});
+                } else {
+                  folderPickerService.changeBinFolder().then((uri) => {
+                    binFolderUri.current = uri;
                   });
-                } else if (item.id === 'binFolder') {
-                  pickFolder('Bin folder error', BIN_FOLDER_URI_KEY).then((binUri) => {
-                    binFolderUri.current = binUri ?? "";
-                    refreshToken.current = Date.now();
-                  });
-                  
                 }
               }}>
                 <Text style={styles.itemText}>{item.label}</Text>

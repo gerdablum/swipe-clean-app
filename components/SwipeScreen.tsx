@@ -27,7 +27,7 @@ const SwipeScreen = ({navigation, route}: SwipeScreenProps) => {
   const returnToPreviewWithFinishedActivity = () => {
     setRememberedIndex(0); // finished the whole set, so reset
     navigation.popTo('Preview', {
-      folderUri: route.params.folderUri,
+      sourceUris: route.params.soureUris,
       binUri: route.params.binUri,
       refreshToken: Date.now(),
     });

@@ -4,8 +4,7 @@ import {SafeAreaView} from 'react-native-safe-area-context';
 import permissionModule from '../services/permissionService';
 import {RootStackParamList} from '../types/navigation';
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
-import { DEST_FOLDER_URI_KEY, BIN_FOLDER_URI_KEY } from '../services/constants';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import {folderPickerService} from '../services/folderPickerInstance';
 
 type PermissionScreenProps = NativeStackScreenProps<
   RootStackParamList,
@@ -20,10 +19,10 @@ const PermissionScreen = ({navigation}: PermissionScreenProps) => {
 
   const handleNextAction = useCallback(() => {
     const checkSavedFolder = async () => {
-            const destUri = await AsyncStorage.getItem(DEST_FOLDER_URI_KEY);
-            const binUri = await AsyncStorage.getItem(BIN_FOLDER_URI_KEY);
+            const destUri = await folderPickerService.getSourceFolders();
+            const binUri = await folderPickerService.getBinFolder();
             if (destUri && binUri) {
-              navigation.replace('Preview', {folderUri: destUri, binUri: binUri});
+              navigation.replace('Preview', {sourceUris: destUri, binUri: binUri});
             } else {
               navigation.replace('SetupScreen');
             }

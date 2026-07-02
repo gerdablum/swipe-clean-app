@@ -8,3 +8,8 @@ export function pick16RandomItems<T>(items: T[]): T[] {
 
   return shuffled.slice(0, 16);
 }
+
+export function arraysEqual(a: string[], b: string[]): boolean {
+  if (a.length !== b.length) return false;
+  return a.every((item, index) => item === b[index]);
+}

@@ -1,6 +1,6 @@
-import React, {useState, useEffect} from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 import {
-  Alert,
+  Animated,
   Image,
   StatusBar,
   StyleSheet,
@@ -10,90 +10,148 @@ import {
 } from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
-import {RootStackParamList} from '../types/navigation';
-import {pickFolder} from '../services/folderPickerService';
 import Icon from 'react-native-vector-icons/Ionicons';
 
-
-import { DEST_FOLDER_URI_KEY, BIN_FOLDER_URI_KEY } from '../services/constants';
-
+import {folderPickerService} from '../services/folderPickerInstance';
+import {RootStackParamList} from '../types/navigation';
 
 type SetupScreenProps = NativeStackScreenProps<RootStackParamList, 'SetupScreen'>;
 
-
-const SetupScreen = ({navigation}: SetupScreenProps) => {
-  const [sourceFolderUri, setSourceFolderUri] = useState<string | null>(null);
+const SetupScreen = ({navigation, route}: SetupScreenProps) => {
+  const [sourceFolderUris, setSourceFolderUris] = useState<string[] | null>(null);
   const [destinationFolderUri, setDestinationFolderUri] = useState<string | null>(null);
+  const sourceCheckAnimation = useRef(new Animated.Value(0)).current;
+  const binCheckAnimation = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-      if (sourceFolderUri && destinationFolderUri) {
-        setTimeout(() => {
-          startPreview();
-        }, 1000);
+    const loadSelectedSourceFolder = async () => {
+      if (route.params?.sourceFolderSelected) {
+        setSourceFolderUris(await folderPickerService.getSourceFolders());
       }
-    }, [sourceFolderUri, destinationFolderUri]);
+    };
 
+    void loadSelectedSourceFolder();
+  }, [route.params?.sourceFolderSelected]);
 
-  const startPreview = () => {
-    if (!sourceFolderUri || !destinationFolderUri) {
-      Alert.alert('Missing folder', 'Select both a source folder and a bin folder first.');
+  useEffect(() => {
+    Animated.timing(sourceCheckAnimation, {
+      toValue: sourceFolderUris && sourceFolderUris.length > 0 ? 1 : 0,
+      duration: 180,
+      useNativeDriver: true,
+    }).start();
+  }, [sourceCheckAnimation, sourceFolderUris]);
+
+  useEffect(() => {
+    Animated.timing(binCheckAnimation, {
+      toValue: destinationFolderUri ? 1 : 0,
+      duration: 180,
+      useNativeDriver: true,
+    }).start();
+  }, [binCheckAnimation, destinationFolderUri]);
+
+  useEffect(() => {
+    if (!sourceFolderUris || sourceFolderUris.length === 0 || !destinationFolderUri) {
       return;
     }
 
-    navigation.replace('Preview', {
-      folderUri: sourceFolderUri,
-      binUri: destinationFolderUri,
-    });
-  };
+    const timeoutId = setTimeout(() => {
+      navigation.replace('Preview', {
+        sourceUris: sourceFolderUris,
+        binUri: destinationFolderUri,
+      });
+    }, 1000);
+
+    return () => clearTimeout(timeoutId);
+  }, [destinationFolderUri, navigation, sourceFolderUris]);
 
   return (
     <SafeAreaView style={styles.safeArea}>
       <StatusBar barStyle="dark-content" />
       <View style={styles.container}>
-      <Text style={styles.title}>Let's set up your folders</Text>
-     
+        <Text style={styles.title}>Let's set up your folders</Text>
+
         <Image
           source={require('../assets/folder_teaser.png')}
           style={styles.image}
         />
         <Text style={styles.infoText}>
           First, pick the folder where your photos live.
-           We'll bring up photos from it for you to swipe through, one at a time.
+          We'll bring up photos from it for you to swipe through, one at a time.
         </Text>
-        <TouchableOpacity
-          accessibilityRole="button"
-          accessibilityLabel="Choose photo folder"
-          onPress={() => {
-            pickFolder('Source folder error', DEST_FOLDER_URI_KEY).then((uri) => { 
-              setSourceFolderUri(uri ?? null);
-            });
-          }
-        }
-          style={styles.button}>
-          <View style={styles.buttonContent}>
-            <Text style={styles.buttonText}>Select source image folder
-            </Text>
-            {sourceFolderUri && <Icon name="checkmark-circle" size={24} color="#fff" style={styles.checkIcon} />}
+        {sourceFolderUris && sourceFolderUris.length > 0 ? (
+          <View style={styles.successRow}>
+            <Text style={styles.successText}>Source folders picked successfully!</Text>
+            <Animated.View
+              style={[
+                styles.successIconWrapper,
+                {
+                  opacity: sourceCheckAnimation,
+                  transform: [
+                    {
+                      scale: sourceCheckAnimation.interpolate({
+                        inputRange: [0, 1],
+                        outputRange: [0.7, 1],
+                      }),
+                    },
+                  ],
+                },
+              ]}>
+              <Icon name="checkmark-circle" size={24} color="#fff" />
+            </Animated.View>
           </View>
-        </TouchableOpacity>
+        ) : (
+          <TouchableOpacity
+            accessibilityRole="button"
+            accessibilityLabel="Choose photo folder"
+            onPress={() => {
+              navigation.navigate('ManageSourceFolderScreen', {origin: 'setup'});
+            }}
+            style={styles.button}>
+            <View style={styles.buttonContent}>
+              <Text style={styles.buttonText}>Select source image folder</Text>
+            </View>
+          </TouchableOpacity>
+        )}
         <Text style={styles.infoText}>
-          Next, pick a bin folder. When you swipe a photo away, it moves here. 
-          Nothing gets deleted forever, so you can always double-check or recover it later.
+          Next, pick a bin folder. When you swipe a photo away, it moves here.
+          {' '}Nothing gets deleted forever, so you can always double-check or recover it later.
         </Text>
-        <TouchableOpacity
-          accessibilityRole="button"
-          accessibilityLabel="Choose bin folder"
-          onPress={() => {
-            pickFolder('Bin folder error', BIN_FOLDER_URI_KEY).then((uri) => {
-            setDestinationFolderUri(uri ?? null);
-            });
-          }}
-          style={styles.button}>
-          <View style={styles.buttonContent}>
-            <Text style={styles.buttonText}>Select bin folder</Text>
-            {destinationFolderUri && <Icon name="checkmark-circle" size={20} color="#fff" style={styles.checkIcon} />}
+        {destinationFolderUri ? (
+          <View style={styles.successRow}>
+            <Text style={styles.successText}>Bin folder picked successfully!</Text>
+            <Animated.View
+              style={[
+                styles.successIconWrapper,
+                {
+                  opacity: binCheckAnimation,
+                  transform: [
+                    {
+                      scale: binCheckAnimation.interpolate({
+                        inputRange: [0, 1],
+                        outputRange: [0.7, 1],
+                      }),
+                    },
+                  ],
+                },
+              ]}>
+              <Icon name="checkmark-circle" size={24} color="#fff" />
+            </Animated.View>
           </View>
-        </TouchableOpacity>
+        ) : (
+          <TouchableOpacity
+            accessibilityRole="button"
+            accessibilityLabel="Choose bin folder"
+            onPress={() => {
+              folderPickerService.changeBinFolder().then((uri) => {
+                setDestinationFolderUri(uri ?? null);
+              });
+            }}
+            style={styles.button}>
+            <View style={styles.buttonContent}>
+              <Text style={styles.buttonText}>Select bin folder</Text>
+            </View>
+          </TouchableOpacity>
+        )}
       </View>
     </SafeAreaView>
   );
@@ -127,47 +185,49 @@ const styles = StyleSheet.create({
     marginTop: 12,
     marginBottom: 24,
   },
-  
   buttonText: {
     color: '#FFFFFF',
     fontSize: 16,
     fontWeight: '600',
     textAlign: 'center',
   },
-  pathLabel: {
-    fontSize: 13,
-    color: '#5a5a5a',
-    marginTop: 10,
-    textAlign: 'center',
-    lineHeight: 18,
-    minHeight: 36,
-  },
-
   buttonContent: {
-    flexDirection: 'row', 
-    alignItems: 'center'
+    flexDirection: 'row',
+    alignItems: 'center',
   },
-
+  successRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#0E7490',
+    borderRadius: 10,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    marginTop: 12,
+    marginBottom: 24,
+  },
+  successText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  successIconWrapper: {
+    marginLeft: 16,
+  },
   infoText: {
-    fontSize: 14, 
+    fontSize: 14,
     color: '#5a5a5a',
     textAlign: 'justify',
     marginTop: 12,
     marginStart: 24,
     marginEnd: 24,
   },
-
   image: {
-    width: '50%', 
-    height: 200, 
+    width: '50%',
+    height: 200,
     alignSelf: 'center',
-    resizeMode: 'contain'
+    resizeMode: 'contain',
   },
-  checkIcon: {
-    marginLeft: 24,
-  },
-
-  
 });
 
 export default SetupScreen;
